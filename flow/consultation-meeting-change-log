@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자문회의 결과 — 기능 변경 사항 정리</title>
+<style>
+  :root {
+    --color-text-primary: #111827;
+    --color-text-secondary: #6B7280;
+    --color-text-tertiary: #9CA3AF;
+    --color-background-primary: #FFFFFF;
+    --color-background-secondary: #F9FAFB;
+    --color-border-tertiary: #E5E7EB;
+    --color-border-secondary: #D1D5DB;
+    --color-background-danger: #FEF2F2;
+    --color-text-danger: #991B1B;
+    --color-border-danger: #FCA5A5;
+    --color-background-warning: #FFFBEB;
+    --color-text-warning: #92400E;
+    --color-border-warning: #FCD34D;
+    --color-background-success: #F0FDF4;
+    --color-text-success: #166534;
+    --color-border-success: #86EFAC;
+    --color-background-info: #EFF6FF;
+    --color-text-info: #1E40AF;
+    --color-border-info: #93C5FD;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-text-primary: #F9FAFB;
+      --color-text-secondary: #9CA3AF;
+      --color-text-tertiary: #6B7280;
+      --color-background-primary: #1F2937;
+      --color-background-secondary: #111827;
+      --color-border-tertiary: #374151;
+      --color-border-secondary: #4B5563;
+      --color-background-danger: #450A0A;
+      --color-text-danger: #FCA5A5;
+      --color-border-danger: #7F1D1D;
+      --color-background-warning: #451A03;
+      --color-text-warning: #FCD34D;
+      --color-border-warning: #78350F;
+      --color-background-success: #052E16;
+      --color-text-success: #86EFAC;
+      --color-border-success: #14532D;
+      --color-background-info: #0C1A40;
+      --color-text-info: #93C5FD;
+      --color-border-info: #1E3A8A;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-secondary);
+    color: var(--color-text-primary);
+    padding: 2rem 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .wrap { display: flex; flex-direction: column; gap: 1.5rem; }
+  .doc-header {
+    border-bottom: 1px solid var(--color-border-tertiary);
+    padding-bottom: 1rem;
+    display: flex; align-items: flex-start; justify-content: space-between;
+  }
+  .doc-title { font-size: 22px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+  .doc-meta { font-size: 13px; color: var(--color-text-secondary); }
+  .meta-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .pill {
+    font-size: 11px; padding: 2px 8px;
+    border-radius: var(--border-radius-md); border: 0.5px solid;
+  }
+  .pill-del { background: var(--color-background-danger); color: var(--color-text-danger); border-color: var(--color-border-danger); }
+  .pill-mod { background: var(--color-background-warning); color: var(--color-text-warning); border-color: var(--color-border-warning); }
+  .pill-add { background: var(--color-background-success); color: var(--color-text-success); border-color: var(--color-border-success); }
+  .pill-gray { background: var(--color-background-secondary); color: var(--color-text-secondary); border-color: var(--color-border-secondary); }
+  .section-label {
+    font-size: 11px; font-weight: 500; color: var(--color-text-tertiary);
+    letter-spacing: .5px; text-transform: uppercase; margin-bottom: 10px; padding-left: 2px;
+  }
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 10px; }
+  .card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 1rem 1.1rem;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .card-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); line-height: 1.4; }
+  .badge {
+    font-size: 10px; padding: 2px 7px; border-radius: 10px;
+    font-weight: 500; white-space: nowrap; flex-shrink: 0;
+  }
+  .b-del { background: var(--color-background-danger); color: var(--color-text-danger); }
+  .b-mod { background: var(--color-background-warning); color: var(--color-text-warning); }
+  .b-add { background: var(--color-background-success); color: var(--color-text-success); }
+  .card-cr { font-size: 11px; color: var(--color-text-tertiary); font-family: monospace; }
+  .card-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .card-body b { font-weight: 500; color: var(--color-text-primary); }
+  .divider-line { height: 0.5px; background: var(--color-border-tertiary); margin: 2px 0; }
+  .impact-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+  .impact-chip {
+    font-size: 11px; color: var(--color-text-tertiary);
+    background: var(--color-background-secondary);
+    padding: 1px 7px; border-radius: var(--border-radius-md);
+  }
+  .impact-chip.hi { color: var(--color-text-danger); background: var(--color-background-danger); }
+  .func-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 6px; margin-top: 4px; }
+  .func-col {
+    background: var(--color-background-secondary);
+    border-radius: var(--border-radius-md); padding: 8px 10px;
+  }
+  .func-col-title {
+    font-size: 10px; font-weight: 500; color: var(--color-text-tertiary);
+    margin-bottom: 5px; letter-spacing: .3px;
+  }
+  .func-item {
+    font-size: 12px; color: var(--color-text-secondary);
+    line-height: 1.6; padding-left: 12px; position: relative;
+  }
+  .func-item::before { content: '·'; position: absolute; left: 2px; color: var(--color-text-tertiary); }
+  .func-item.del::before { content: '✕'; font-size: 9px; left: 1px; color: var(--color-text-danger); }
+  .func-item.add::before { content: '+'; left: 1px; color: var(--color-text-success); font-weight: 500; }
+  .func-item b { font-weight: 500; color: var(--color-text-primary); }
+  .open-q {
+    background: var(--color-background-info);
+    border: 0.5px solid var(--color-border-info);
+    border-radius: var(--border-radius-md);
+    padding: 8px 10px; font-size: 12px;
+    color: var(--color-text-info); line-height: 1.5;
+  }
+  .open-q-title { font-weight: 500; margin-bottom: 3px; }
+  @media (max-width: 640px) {
+    .func-row { grid-template-columns: 1fr; }
+    .cards-grid { grid-template-columns: 1fr !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="doc-header">
+    <div>
+      <div class="doc-title">자문회의 결과 — 기능 변경 사항 정리</div>
+      <div class="doc-meta">2026-04-06 &nbsp;·&nbsp; 고양시 거점형 스마트시티 UAM 디지털트윈 구축</div>
+      <div class="meta-pills">
+        <span class="pill pill-del">기능 제거 1건</span>
+        <span class="pill pill-mod">기능 변경 2건</span>
+        <span class="pill pill-add">기능 추가 4건</span>
+        <span class="pill pill-gray">CR-SAM-UAM-001 ~ 007</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 기능 제거 -->
+  <div>
+    <div class="section-label">기능 제거</div>
+    <div class="cards-grid" style="grid-template-columns:1fr">
+      <div class="card" style="border-left:2.5px solid var(--color-border-danger)">
+        <div class="card-top">
+          <div>
+            <div class="card-title">항로 승인(채택) 워크플로</div>
+            <div class="card-cr">CR-SAM-UAM-001 / 003 &nbsp;·&nbsp; 영향도 High</div>
+          </div>
+          <span class="badge b-del">제거</span>
+        </div>
+        <div class="card-body">
+          <b>확인된 사실</b><br>
+          시스템 내부 승인 절차가 불필요하며, UAM 항로 승인 주체는 <b>국토교통부</b>. 현재 설계하는 시스템은 국토부와 독립적으로 운영되며 상호 연계 일정 미정.
+        </div>
+        <div class="divider-line"></div>
+        <div class="func-row">
+          <div class="func-col">
+            <div class="func-col-title">제거되는 기능</div>
+            <div class="func-item del">시뮬레이션 결과 승인/반려 처리</div>
+            <div class="func-item del">PENDING → APPROVED → ACTIVE 상태 전환</div>
+            <div class="func-item del">운영항로 승격 처리 (APPROVED_DYNAMIC_ROUTE 생성)</div>
+            <div class="func-item del">항로 일정관리의 승인 워크플로 UI</div>
+          </div>
+          <div class="func-col">
+            <div class="func-col-title">대체 방향</div>
+            <div class="func-item add">시뮬레이션 = 단순 공간분석·경로평가 도구로 재정의</div>
+            <div class="func-item add">분석 결과는 참고 데이터로만 활용</div>
+            <div class="func-item add">국토부 연계 인터페이스는 미래 확장 포인트로 예약 (IF-SAM-008)</div>
+            <div class="func-item add">화면 레이블 변경: "승인" → "분석 완료", "채택" → "참고 경로 지정"</div>
+          </div>
+        </div>
+        <div class="impact-row">
+          <span class="impact-chip hi">CI-UAM-2001</span>
+          <span class="impact-chip hi">CI-UAM-2003</span>
+          <span class="impact-chip hi">CI-UAM-3002</span>
+          <span class="impact-chip">DB: APPROVED_*_ROUTE</span>
+          <span class="impact-chip">SFR-018 계열</span>
+          <span class="impact-chip">DT-MENU-241~255</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 기능 변경 -->
+  <div>
+    <div class="section-label">기능 변경</div>
+    <div class="cards-grid" style="grid-template-columns:1fr 1fr">
+
+      <div class="card" style="border-left:2.5px solid var(--color-border-warning)">
+        <div class="card-top">
+          <div>
+            <div class="card-title">스케줄-항로 연동 방식</div>
+            <div class="card-cr">CR-SAM-UAM-002 &nbsp;·&nbsp; 영향도 Medium</div>
+          </div>
+          <span class="badge b-mod">변경</span>
+        </div>
+        <div class="card-body">
+          <b>확인된 사실</b><br>
+          시뮬레이션에서 채택된 경로가 실제 운항경로로 사용될 가능성이 거의 없음. 그러나 스케줄과 항로의 조인 구조 자체는 향후 관리를 위해 유지 필요.
+        </div>
+        <div class="divider-line"></div>
+        <div class="func-col" style="margin-top:4px">
+          <div class="func-col-title">변경 내용</div>
+          <div class="func-item">스케줄-항로 조인 구조 <b>유지</b></div>
+          <div class="func-item add">FLIGHT_SCHEDULE에 <b>실제 운항 적용 여부</b> 플래그 추가 (RTE_APPLY_YN)</div>
+          <div class="func-item add">스케줄 등록 시 "실제 운항 적용" 선택 가능 (운영자 판단)</div>
+          <div class="func-item add">미적용 선택 시 사유 입력란 활성화</div>
+          <div class="func-item">관제화면: RTE_APPLY_YN=Y 항로만 실선 표시</div>
+        </div>
+        <div class="impact-row">
+          <span class="impact-chip hi">CI-UAM-3001</span>
+          <span class="impact-chip">DB: FLIGHT_SCHEDULE</span>
+          <span class="impact-chip">DT-MENU-254</span>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:2.5px solid var(--color-border-warning)">
+        <div class="card-top">
+          <div>
+            <div class="card-title">시뮬레이션 서비스 범위 재정의</div>
+            <div class="card-cr">CR-SAM-UAM-003 &nbsp;·&nbsp; 영향도 High</div>
+          </div>
+          <span class="badge b-mod">변경</span>
+        </div>
+        <div class="card-body">
+          <b>확인된 사실</b><br>
+          UAM 항로는 국토부 승인 사항으로, 현 시스템의 승인 프로세스는 실제 행정 절차와 무관. 현 단계에서 국토부 시스템 연계는 범위 외.
+        </div>
+        <div class="divider-line"></div>
+        <div class="func-col" style="margin-top:4px">
+          <div class="func-col-title">변경 내용</div>
+          <div class="func-item del">시스템 내부 항로 "승인" 개념 제거</div>
+          <div class="func-item add">시뮬레이션 = <b>분석·검토·시각화</b> 도구로 재정의</div>
+          <div class="func-item add">분석 상태값 재정의: PENDING/APPROVED → DRAFT/ANALYZED/ARCHIVED</div>
+          <div class="func-item add">국토부 연계 인터페이스 예약 등록 (IF-SAM-008, 시점 미정)</div>
+        </div>
+        <div class="impact-row">
+          <span class="impact-chip hi">SFR-018 계열 전반</span>
+          <span class="impact-chip">CI-UAM-2001~2003</span>
+          <span class="impact-chip">요구사항 추적표</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 기능 추가 -->
+  <div>
+    <div class="section-label">기능 추가</div>
+    <div class="cards-grid" style="grid-template-columns:1fr 1fr">
+
+      <div class="card" style="border-left:2.5px solid var(--color-border-success)">
+        <div class="card-top">
+          <div>
+            <div class="card-title">비상·응급 시뮬레이션 강화</div>
+            <div class="card-cr">CR-SAM-UAM-004 &nbsp;·&nbsp; 영향도 Medium</div>
+          </div>
+          <span class="badge b-add">추가</span>
+        </div>
+        <div class="card-body">
+          <b>배경</b><br>
+          응급·비상상황 대응 시뮬레이션이 가장 높은 우선순위. 비행불가공역(스팟)을 긴급하게 추가하고 즉시 시뮬레이션 재실행이 필요한 시나리오 대응.
+        </div>
+        <div class="divider-line"></div>
+        <div class="func-col" style="margin-top:4px">
+          <div class="func-col-title">추가 기능</div>
+          <div class="func-item add"><b>긴급 비행불가공역 스팟</b> 실시간 추가 (지도 클릭, 반경 설정)</div>
+          <div class="func-item add">이벤트 유형에 <b>비상/응급 카테고리</b> 추가</div>
+          <div class="func-item add"><b>비상 시뮬레이션 빠른실행</b> 버튼 (단축 플로우)</div>
+          <div class="func-item add">SFR-018-18 신규 등록</div>
+        </div>
+        <div class="impact-row">
+          <span class="impact-chip hi">CI-UAM-2001</span>
+          <span class="impact-chip">DB: RESTRICTION_ZONE</span>
+          <span class="impact-chip">DT-MENU-243</span>
+          <span class="impact-chip">SFR-018-03 확장</span>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:2.5px solid var(--color-border-success)">
+        <div class="card-top">
+          <div>
+            <div class="card-title">회랑 데이터 임포트</div>
+            <div class="card-cr">CR-SAM-UAM-005 &nbsp;·&nbsp; 영향도 Medium</div>
+          </div>
+          <span class="badge b-add">추가</span>
+        </div>
+        <div class="card-body">
+          <b>배경</b><br>
+          자동회랑설계 등 UAM 회랑 연구가 진행 중. 외부에서 설계·완성된 회랑 데이터를 시스템에 등록하는 기능이 필요.
+        </div>
+        <div class="divider-line"></div>
+        <div class="func-col" style="margin-top:4px">
+          <div class="func-col-title">추가 기능</div>
+          <div class="func-item add">외부 회랑 설계 데이터 <b>파일 임포트</b> (GeoJSON, KML, WKT)</div>
+          <div class="func-item add">임포트 이력 관리 (원천 파일명, 시각 기록)</div>
+          <div class="func-item add">DT-MENU-261 신규: 회랑 데이터 임포트</div>
+          <div class="func-item add">SFR-018-18(또는 019) 신규 등록</div>
+          <div class="func-item">향후 외부 API 연계로 확장 예정 (IF-SAM-009 예약)</div>
+        </div>
+        <div class="impact-row">
+          <span class="impact-chip hi">CI-UAM-3002</span>
+          <span class="impact-chip">DB: CORRIDOR</span>
+          <span class="impact-chip">DT-MENU-261 신규</span>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:2.5px solid var(--color-border-success)">
+        <div class="card-top">
+          <div>
+            <div class="card-title">UAM 하늘길 기본 지도 레이어</div>
+            <div class="card-cr">CR-SAM-UAM-006 &nbsp;·&nbsp; 영향도 Medium</div>
+          </div>
+          <span class="badge b-add">추가</span>
+        </div>
+        <div class="card-body">
+          <b>배경</b><br>
+          비행기와 마찬가지로 UAM도 전용 하늘길이 생성될 것으로 예상. 시스템 내 지도의 기본 배경 레이어로 UAM 항공로 정보를 표출·관리할 필요.
+        </div>
+        <div class="divider-line"></div>
+        <div class="func-col" style="margin-top:4px">
+          <div class="func-col-title">추가 기능</div>
+          <div class="func-item add">UAM 하늘길 레이어를 <b>관제·시뮬레이션 공통 기본 레이어</b>로 추가</div>
+          <div class="func-item add">레이어 제어 패널에 "UAM 하늘길" 토글 추가 (기본값: ON)</div>
+          <div class="func-item add">DT-MENU-262 신규: UAM 하늘길 CRUD 관리</div>
+          <div class="func-item add">SFR-017-18 신규 등록</div>
+          <div class="func-item">AIRSPACE_ZONE 테이블 ZONE_TYPE_CD=UAM_SKYWAY 코드 추가로 처리</div>
+        </div>
+        <div class="impact-row">
+          <span class="impact-chip hi">CI-UAM-1001</span>
+          <span class="impact-chip">CI-UAM-2001</span>
+          <span class="impact-chip">DB: AIRSPACE_ZONE</span>
+          <span class="impact-chip">DT-MENU-262 신규</span>
+        </div>
+      </div>
+
+      <div class="card" style="border-left:2.5px solid var(--color-border-success)">
+        <div class="card-top">
+          <div>
+            <div class="card-title">토지이용정보 통합환경 추가</div>
+            <div class="card-cr">CR-SAM-UAM-007 &nbsp;·&nbsp; 영향도 Low</div>
+          </div>
+          <span class="badge b-add">추가</span>
+        </div>
+        <div class="card-body">
+          <b>배경</b><br>
+          버티포트 입지분석 및 항로 분석 시 토지이용 현황 정보가 필요. 건축행정시스템 세움터 연계는 외부시스템 연계 시트에 기등록 상태.
+        </div>
+        <div class="divider-line"></div>
+        <div class="func-col" style="margin-top:4px">
+          <div class="func-col-title">추가 기능</div>
+          <div class="func-item add">통합 환경 모니터링에 <b>토지이용정보 레이어</b> 추가</div>
+          <div class="func-item add">DT-MENU-263 신규: 토지이용정보 조회</div>
+          <div class="func-item add">IF-SAM-010 신규: 건축행정시스템 세움터 연계 (수급필요 → 연계예정)</div>
+          <div class="func-item add">SFR-017-19 신규 등록</div>
+          <div class="func-item">DB: LAND_USE_INFO 신규 테이블 또는 공간정보 레이어 참조</div>
+        </div>
+        <div class="impact-row">
+          <span class="impact-chip hi">CI-UAM-1003</span>
+          <span class="impact-chip">CI-UAM-2002</span>
+          <span class="impact-chip">IF-SAM-010 신규</span>
+          <span class="impact-chip">DT-MENU-263 신규</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 후속 결정 필요 사항 -->
+  <div>
+    <div class="section-label">후속 결정 필요 사항</div>
+    <div class="cards-grid" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="open-q">
+        <div class="open-q-title">APPROVED_*_ROUTE 테이블 처리</div>
+        승인 워크플로 제거 시 해당 테이블 존치 여부 결정 필요. 향후 국토부 연계 재도입 가능성을 고려하여 테이블 유지, API·화면만 제거 권고.
+      </div>
+      <div class="open-q">
+        <div class="open-q-title">회랑 임포트 지원 포맷</div>
+        자동회랑설계 연구 결과 데이터의 출력 포맷 확인 후 GeoJSON/KML/WKT 우선순위 결정 필요.
+      </div>
+      <div class="open-q">
+        <div class="open-q-title">UAM 하늘길 데이터 원천</div>
+        초기에는 수동 등록으로 시작. 향후 항공정보포털(NOTAM) 또는 국가공역시스템(AIRIS) API 연계 방향 별도 협의 필요.
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
